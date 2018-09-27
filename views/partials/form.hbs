@@ -1,0 +1,16 @@
+<form class="ui form" action="{{action}}" method="post">
+    <div class="field">
+        <label>Title</label>
+        <input required type="text" name="blog[title]" value="{{blog.title}}">
+    </div>
+    <div class="field">
+        <label>Image</label>
+        <input required type="text" name="blog[image]" value="{{blog.image}}">
+    </div>
+    <div class="field">
+        <label>Body</label>
+        <textarea required name="blog[body]">{{blog.body}}</textarea>
+    </div>
+    <input class="ui violet basic button" type="submit">
+</form>
+

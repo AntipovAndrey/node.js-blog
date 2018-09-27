@@ -1,0 +1,15 @@
+html {
+    font-size: 1rem;
+}
+
+.segment {
+    padding: 3.5em 1em 1em;
+}
+
+i.code {
+    font-size: 1.2em;
+}
+
+.container.main {
+    margin-top: 4.0em;
+}

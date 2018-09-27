@@ -1,0 +1,4 @@
+<div class="ui main text container segment">
+    <div class="ui huge header">Edit {{blog.title}}</div>
+    {{> form action=(concat "/blogs/" blog._id "/edit?_method=PUT") blog=blog}}
+</div>
