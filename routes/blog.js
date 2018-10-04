@@ -1,7 +1,8 @@
 const express = require('express');
 const router = express.Router();
-const Blog = require('../repository/blog');
-
+const Blog = require('../model/blog');
+const ifLoggedIn = require('./general/auth').ifLoggedIn('/login');
+const {isLoggedIn} = require('./general/auth');
 
 router.get('/', (req, res, next) => {
     Blog.find({})
@@ -11,50 +12,65 @@ router.get('/', (req, res, next) => {
             });
         })
         .catch(next);
-
-});
-
-router.get('/new', (req, res) => {
-    res.render('new');
-});
-
-router.post('/', (req, res, next) => {
-    req.body.blog.body = req.sanitize(req.body.blog.body);
-    Blog.create(req.body.blog)
-        .then(newBlog => {
-            res.redirect(`${req.baseUrl}/${newBlog._id}`);
-        })
-        .catch(next)
 });
 
 router.get('/:id', (req, res, next) => {
     if (!Blog.isObjectId(req.params.id)) {
-        next();
-        return;
+        return next();
     }
     Blog.findById(req.params.id)
         .then(blog => {
             if (!blog) {
-                next();
-                return;
+                return next();
             }
             res.render('show', {
-                blog: blog
-            });
+                blog: blog,
+                canModify: isLoggedIn(req) && blog.author.id.equals(req.user._id)
+            })
         })
         .catch(next);
 });
 
-router.get('/:id/edit', (req, res, next) => {
+router.get('/new', ifLoggedIn, (req, res) => {
+    res.render('new');
+});
+
+router.post('/', ifLoggedIn, async (req, res, next) => {
+    req.body.blog.body = req.sanitize(req.body.blog.body);
+    const blog = await Blog.create(req.body.blog);
+    blog.author.id = req.user._id;
+    blog.author.username = req.user.username;
+    blog.save();
+    res.redirect(`${req.baseUrl}/${blog._id}`);
+});
+
+const ifPermitted = (req, res, next) => {
+    const fail = () => res.redirect('/login');
+    if (isLoggedIn(req)) {
+        Blog.findById(req.params.id)
+            .then(blog => {
+                if (!blog) {
+                    return next();
+                }
+                if (blog.author.id.equals(req.user._id)) {
+                    return next();
+                }
+                res.status(403).send();
+            })
+            .catch(next);
+    } else {
+        fail();
+    }
+};
+
+router.get('/:id/edit', ifPermitted, (req, res, next) => {
     if (!Blog.isObjectId(req.params.id)) {
-        next();
-        return;
+        return next();
     }
     Blog.findById(req.params.id)
         .then(blog => {
             if (!blog) {
-                next();
-                return;
+                return next();
             }
             res.render('edit', {
                 blog: blog
@@ -63,27 +79,24 @@ router.get('/:id/edit', (req, res, next) => {
         .catch(next);
 });
 
-router.put('/:id/edit', (req, res, next) => {
+router.put('/:id/edit', ifPermitted, (req, res, next) => {
     if (!Blog.isObjectId(req.params.id)) {
-        next();
-        return;
+        return next();
     }
     req.body.blog.body = req.sanitize(req.body.blog.body);
     Blog.findByIdAndUpdate(req.params.id, req.body.blog)
         .then(updatedBlog => {
             if (!updatedBlog) {
-                next();
-                return;
+                return next();
             }
             res.redirect(`${req.baseUrl}/${updatedBlog._id}`);
         })
         .catch(next);
 });
 
-router.delete('/:id', (req, res, next) => {
+router.delete('/:id', ifPermitted, (req, res, next) => {
     if (!Blog.isObjectId(req.params.id)) {
-        next();
-        return;
+        return next();
     }
     Blog.findByIdAndDelete(req.params.id)
         .then(() => res.redirect(req.baseUrl + '/'))

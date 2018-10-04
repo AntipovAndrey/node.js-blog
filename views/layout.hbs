@@ -10,9 +10,19 @@
     <div class="ui container">
         <div class="header item"><i class="code icon"></i> Blog Site</div>
         <a href="/" class="item">Home</a>
-        <a href="/blogs/new" class="item">New Post</a>
+        {{#if currentUser}}
+            <a href="/blogs/new" class="item">New Post</a>
+            <a class="item right floated" href="/logout">Logout</a>
+        {{else}}
+            <div class="right menu">
+                <a class="item " href="/login">Login</a>
+                <a class="item" href="/register">Sing Up</a>
+            </div>
+        {{/if}}
     </div>
 </div>
-{{{body}}}
+<div class="ui container">
+    {{{body}}}
+</div>
 </body>
 </html>

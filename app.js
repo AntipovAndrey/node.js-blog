@@ -7,6 +7,9 @@ const hbs = require('hbs');
 const mongoose = require('mongoose');
 const methodOverride = require('method-override');
 const sanitizer = require('express-sanitizer');
+const passport = require('passport');
+const passportLocalMongoose = require('passport-local-mongoose');
+const LocalStrategy = require('passport-local');
 
 mongoose.plugin(function (schema) {
     schema.statics.isObjectId = function (id) {
@@ -17,13 +20,11 @@ mongoose.plugin(function (schema) {
     };
 });
 
-const blogRouter = require('./routes/blog');
-const indexRouter = require('./routes/index');
-
-const app = express();
 
 mongoose.connect('mongodb://localhost/blog', {useNewUrlParser: true});
 mongoose.set('useFindAndModify', false);
+
+const app = express();
 
 // view engine setup
 require('./hbshelpers');
@@ -39,9 +40,27 @@ app.use(express.static(path.join(__dirname, 'public')));
 app.use(methodOverride('_method'));
 app.use(sanitizer());
 
+app.use(require('express-session')({
+    secret: "My Frog is the best",
+    resave: false,
+    saveUninitialized: false
+}));
+app.use(passport.initialize());
+app.use(passport.session());
+const User = require('./model/user');
+passport.serializeUser(User.serializeUser());
+passport.deserializeUser(User.deserializeUser());
+passport.use(new LocalStrategy(User.authenticate()));
 
-app.use('/', indexRouter);
-app.use('/blogs', blogRouter);
+
+app.use((req, res, next) => {
+    res.locals.currentUser = req.user;
+    return next();
+});
+
+app.use('/', require('./routes/index'));
+app.use('/', require('./routes/user'));
+app.use('/blogs', require('./routes/blog'));
 
 // catch 404 and forward to error handler
 app.use(function (req, res, next) {

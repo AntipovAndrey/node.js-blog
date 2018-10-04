@@ -1,5 +1,5 @@
 <div class="ui main text container">
-    <div class="ui huge header">{{blog.title}}</div>
+    <div class="ui huge header">{{blog.title}} by {{blog.author.username}}</div>
     <div class="ui top attached segment">
         <img class="ui centered rounded image" src="{{blog.image}}">
     </div>
@@ -9,10 +9,13 @@
     <div class="ui bottom attached segment">
         <span>{{ dateFormat blog.created "DD, MMMM of YYYY" }}</span>
     </div>
-    <a class="ui right floated orange basic button" href="/blogs/{{blog._id}}/edit">Edit</a>
-    <form class="ui right floated form" style="display: inline" action="/blogs/{{blog._id}}?_method=DELETE"
-          method="post">
-        <button class="ui red basic button">Delete</button>
-    </form>
+    {{#if canModify}}
+        <a class="ui right floated orange basic button" href="/blogs/{{blog._id}}/edit">Edit</a>
+        <form class="ui right floated form" style="display: inline" action="/blogs/{{blog._id}}?_method=DELETE"
+              method="post">
+            <button class="ui red basic button">Delete</button>
+        </form>
+    {{/if}}
+
     <p></p>
 </div>
